@@ -39,7 +39,8 @@ struct TrayIconInfo {
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // エクスプローラプロセスのPIDを取得する関数
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-DWORD GetExplorerProcessID() {
+DWORD GetExplorerProcessID() 
+{
     DWORD explorerPID = 0;
     PROCESSENTRY32 entry;
     entry.dwSize = sizeof(PROCESSENTRY32);
@@ -166,40 +167,62 @@ std::vector<TrayIconInfo> GetTrayIcons(HWND hToolWnd ,HANDLE hProc)
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-// delTasktray メイン
+// 削除するアイコンを見つけて削除します。
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-int delTasktrayMain(_TCHAR *tname) 
+void findAndDel(HANDLE hProcess ,HWND toolWnd ,_TCHAR *tname)
 {
 	int32_t ack;
 
-	DWORD explorerPID = GetExplorerProcessID();
-    if (!explorerPID) return -10;
-
-    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, explorerPID);	// PROCESS_VM_READ | PROCESS_QUERY_INFORMATION
-    if (!hProcess) return -11;
-
-    HWND notifyWnd = FindWindow(_T("NotifyIconOverflowWindow"), NULL);
-    if (!notifyWnd) return -12;
-
-    HWND toolWnd = FindWindowEx(notifyWnd, NULL, _T("ToolbarWindow32"), NULL);
-    if (!toolWnd) return -13;
-
+	setlocale(LC_ALL, ""); // ロケールをデフォルトのロケールに設定
 
 	std::vector<TrayIconInfo> icons = GetTrayIcons(toolWnd ,hProcess);
 
     for (const auto &e : icons) {
 
-		if(e.tooltxt == tname){
+		if(tname == _T("-l")){
+			wprintf(L"No.%4d \t %s\n" , e.index+1 , e.tooltxt.c_str());
+
+		}else if(tname == e.tooltxt){
 
 			ack = SendMessage(toolWnd ,TB_DELETEBUTTON ,e.uID ,0);
 			if(ack == 1){
 				wprintf(L"Delete %s\n" , tname);
 			}
 		}
-
     }
-	
-	CloseHandle(hProcess);
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// タスクバーにあるアイコン削除 メイン
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+int delTaskbarMain(HANDLE hProcess ,_TCHAR *tname)
+{
+	HWND notifyWnd = FindWindow(_T("Shell_TrayWnd"), NULL);
+    if (!notifyWnd) return -12;
+
+    HWND toolWnd = FindWindowEx(notifyWnd, NULL, _T("TrayNotifyWnd"), NULL);
+    if (!toolWnd) return -13;
+
+    HWND promotWnd = FindWindowEx(toolWnd, NULL, _T("ToolbarWindow32"), NULL);
+    if (!promotWnd) return -13;
+
+	findAndDel(hProcess ,promotWnd ,tname);
+
+	return 0;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// タスクトレイにあるアイコン削除 メイン
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+int delTasktrayMain(HANDLE hProcess ,_TCHAR *tname) 
+{
+    HWND notifyWnd = FindWindow(_T("NotifyIconOverflowWindow"), NULL);
+    if (!notifyWnd) return -12;
+
+    HWND toolWnd = FindWindowEx(notifyWnd, NULL, _T("ToolbarWindow32"), NULL);
+    if (!toolWnd) return -13;
+
+	findAndDel(hProcess ,toolWnd ,tname);
 
     return 0;
 }

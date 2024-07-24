@@ -90,10 +90,8 @@
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="TasktrayDel.cpp" />
-    <ClCompile Include="TasktrayDel1.cpp" />
     <ClCompile Include="TasktrayDel2.cpp" />
     <ClCompile Include="TasktrayIcons.cpp" />
-    <ClCompile Include="TasktrayIconsB.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

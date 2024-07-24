@@ -18,9 +18,9 @@
 
 std::vector<HICON> GetTrayIcons();
 
-
-
-int delTasktrayMain(_TCHAR *tname);
+DWORD GetExplorerProcessID();
+int delTaskbarMain(HANDLE hProcess ,_TCHAR *tname);
+int delTasktrayMain(HANDLE hProcess ,_TCHAR *tname);
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -33,6 +33,13 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 
+	DWORD explorerPID = GetExplorerProcessID();
+    if (!explorerPID) return -10;
+
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, explorerPID);	// PROCESS_VM_READ | PROCESS_QUERY_INFORMATION
+    if (!hProcess) return -11;
+
+
 //	GetGoogleDriveIcon();
 
 //	delFAHTasktray();
@@ -41,7 +48,11 @@ int _tmain(int argc, _TCHAR* argv[])
 
 //	GetTrayIcons();
 
-	delTasktrayMain(tname);
+	delTaskbarMain(hProcess ,tname);
+	Sleep(100);	// ‹C‹x‚ß
+	delTasktrayMain(hProcess ,tname);
+
+	CloseHandle(hProcess);
 
 	return 0;
 }
